@@ -14,7 +14,7 @@ import { storeFile } from '@/lib/storage';
 import { MAX_FILE_BYTES, ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES } from '@/lib/limits';
 import { ERRORS } from '@/lib/errors';
 import { generatePreview } from '@/lib/analyzer';
-import { createSession, setSessionCookie } from '@/lib/session';
+import { createSession, setSessionCookie, getSessionFromCookie } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,6 +63,10 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Check if user has an existing paid session (for re-upload after payment)
+    const existingSession = await getSessionFromCookie();
+    const isPaidReupload = existingSession?.paid === true;
+
     // Generate unique file ID
     const fileId = uuidv4();
 
@@ -86,11 +90,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(json, { status });
     }
 
-    // Create session token (not yet paid)
+    // Create session token (preserve paid status if re-uploading after payment)
     const token = await createSession({
       fileId,
       fileName: file.name,
-      paid: false,
+      paid: isPaidReupload, // Preserve paid status if user already paid
+      selectedKeyColumn: existingSession?.selectedKeyColumn, // Preserve key column selection
     });
 
     // Set session cookie

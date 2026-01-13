@@ -21,6 +21,7 @@ export type ErrorCode =
   | 'INVALID_SESSION'
   | 'PAYMENT_REQUIRED'
   | 'FILE_EXPIRED'
+  | 'FILE_MISSING_REUPLOAD'
   | 'PARSE_ERROR';
 
 /**
@@ -81,6 +82,15 @@ export const ERRORS = {
   
   FILE_EXPIRED: () =>
     createErrorResponse('FILE_EXPIRED', 'File expired. Please upload again.', 404),
+  
+  FILE_MISSING_REUPLOAD: (fileName?: string) =>
+    createErrorResponse(
+      'FILE_MISSING_REUPLOAD',
+      fileName
+        ? `File "${fileName}" is no longer available. Since you've already paid, please re-upload the same file to generate your report.`
+        : 'File is no longer available. Since you\'ve already paid, please re-upload the same file to generate your report.',
+      404
+    ),
   
   PARSE_ERROR: () =>
     createErrorResponse('PARSE_ERROR', 'Failed to parse Excel file. The file may be corrupted or password-protected.', 400),

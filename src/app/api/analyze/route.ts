@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     }
     
     if (!buffer) {
-      const { json, status } = ERRORS.FILE_EXPIRED();
+      // If session is paid but file is missing, allow re-upload
+      const { json, status } = ERRORS.FILE_MISSING_REUPLOAD(session.fileName);
       return NextResponse.json(json, { status });
     }
 

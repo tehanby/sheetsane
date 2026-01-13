@@ -101,6 +101,12 @@ export default function ReportPage() {
         data = await response.json();
 
         if (!response.ok) {
+          // Check if it's a file missing error that allows re-upload
+          if (data.code === 'FILE_MISSING_REUPLOAD') {
+            setError(data.error || 'File is missing. Please re-upload.');
+            setState('error');
+            return;
+          }
           throw new Error(data.error || 'Analysis failed');
         }
       }
@@ -166,6 +172,8 @@ export default function ReportPage() {
   }
 
   if (state === 'error') {
+    const isReuploadNeeded = error?.includes('re-upload') || error?.includes('no longer available');
+    
     return (
       <div className="max-w-xl mx-auto px-4 py-24 text-center">
         <div className="animate-fade-in">
@@ -175,12 +183,23 @@ export default function ReportPage() {
             </svg>
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground mb-2">
-            Something went wrong
+            {isReuploadNeeded ? 'File Not Available' : 'Something went wrong'}
           </h1>
           <p className="text-foreground/60 mb-6">{error}</p>
-          <a href="/" className="btn-primary inline-flex items-center justify-center">
-            Start Over
-          </a>
+          {isReuploadNeeded ? (
+            <div className="space-y-3">
+              <p className="text-sm text-foreground/50 mb-4">
+                Your payment was successful. Just re-upload the same file to generate your report.
+              </p>
+              <a href="/" className="btn-primary inline-flex items-center justify-center">
+                Re-upload File
+              </a>
+            </div>
+          ) : (
+            <a href="/" className="btn-primary inline-flex items-center justify-center">
+              Start Over
+            </a>
+          )}
         </div>
       </div>
     );
