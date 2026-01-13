@@ -8,6 +8,7 @@ import { getSessionFromCookie, createSession, setSessionCookie } from '@/lib/ses
 import { getClientIp } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, readTempFile } from '@/lib/tmpFiles';
+import { fileExists, getFile } from '@/lib/storage';
 import { ERRORS } from '@/lib/errors';
 import { createCheckoutSession } from '@/lib/stripe';
 
@@ -40,9 +41,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(json, { status });
     }
 
-    // Check if file still exists in temp storage
-    const buffer = await readTempFile(session.fileId);
-    if (!buffer) {
+    // Check if file still exists (try in-memory first, then /tmp)
+    const storedFile = getFile(session.fileId);
+    const tempBuffer = storedFile ? null : await readTempFile(session.fileId);
+    
+    if (!storedFile && !tempBuffer) {
       const { json, status } = ERRORS.FILE_EXPIRED();
       return NextResponse.json(json, { status });
     }

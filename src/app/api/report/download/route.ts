@@ -10,7 +10,7 @@ import { getClientIp } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, readTempFile, deleteTempFile } from '@/lib/tmpFiles';
 import { ERRORS } from '@/lib/errors';
-import { getAnalysisResult } from '@/lib/storage';
+import { getAnalysisResult, getFile } from '@/lib/storage';
 import { analyzeWorkbook } from '@/lib/analyzer';
 import { generatePDFReport } from '@/lib/pdf-generator';
 
@@ -45,8 +45,17 @@ export async function GET(request: NextRequest) {
     let result = getAnalysisResult(session.fileId);
     
     if (!result) {
-      // Try to regenerate from temp file
-      const buffer = await readTempFile(session.fileId);
+      // Try to regenerate from storage (try in-memory first, then /tmp)
+      let buffer: Buffer | null = null;
+      
+      // Try in-memory storage first
+      const storedFile = getFile(session.fileId);
+      if (storedFile) {
+        buffer = storedFile.buffer;
+      } else {
+        // Fallback to /tmp
+        buffer = await readTempFile(session.fileId);
+      }
       
       if (!buffer) {
         const { json, status } = ERRORS.FILE_EXPIRED();

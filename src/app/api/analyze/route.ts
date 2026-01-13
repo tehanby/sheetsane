@@ -11,7 +11,7 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, readTempFile } from '@/lib/tmpFiles';
 import { ERRORS } from '@/lib/errors';
 import { analyzeWorkbook } from '@/lib/analyzer';
-import { storeAnalysisResult, getAnalysisResult } from '@/lib/storage';
+import { storeAnalysisResult, getAnalysisResult, getFile } from '@/lib/storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,8 +49,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get file from temp storage
-    const buffer = await readTempFile(session.fileId);
+    // Get file from storage (try in-memory first, then /tmp)
+    let buffer: Buffer | null = null;
+    
+    // Try in-memory storage first (works within same function invocation)
+    const storedFile = getFile(session.fileId);
+    if (storedFile) {
+      buffer = storedFile.buffer;
+    } else {
+      // Fallback to /tmp (may not persist on Vercel between invocations)
+      buffer = await readTempFile(session.fileId);
+    }
     
     if (!buffer) {
       const { json, status } = ERRORS.FILE_EXPIRED();

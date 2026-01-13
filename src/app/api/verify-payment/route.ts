@@ -7,15 +7,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromCookie, markSessionAsPaid } from '@/lib/session';
 import { getClientIp } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
-import { cleanupOldTempFiles, readTempFile } from '@/lib/tmpFiles';
+// Note: We don't need to check temp files here - payment verification
+// doesn't require the file to exist, only analysis does
 import { ERRORS } from '@/lib/errors';
 import { stripe } from '@/lib/stripe';
 
 export async function POST(request: NextRequest) {
   try {
-    // Cleanup old temp files
-    await cleanupOldTempFiles();
-
     // Rate limiting (light endpoint)
     const ip = getClientIp(request);
     const rateLimitCheck = checkRateLimit(ip, RATE_LIMITS.LIGHT);
@@ -65,12 +63,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(json, { status });
     }
 
-    // Verify file still exists in temp storage
-    const buffer = await readTempFile(session.fileId);
-    if (!buffer) {
-      const { json, status } = ERRORS.FILE_EXPIRED();
-      return NextResponse.json(json, { status });
-    }
+    // Note: We don't check if file exists here because:
+    // 1. On Vercel, /tmp is ephemeral and may not persist between invocations
+    // 2. Payment verification doesn't need the file - we only need it for analysis
+    // 3. If file is missing during analysis, user will get a clear error then
 
     // Mark session as paid
     await markSessionAsPaid(session);

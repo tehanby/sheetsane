@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getClientIp } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, saveTempFile } from '@/lib/tmpFiles';
+import { storeFile } from '@/lib/storage';
 import { MAX_FILE_BYTES, ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES } from '@/lib/limits';
 import { ERRORS } from '@/lib/errors';
 import { generatePreview } from '@/lib/analyzer';
@@ -65,8 +66,16 @@ export async function POST(request: NextRequest) {
     // Generate unique file ID
     const fileId = uuidv4();
 
-    // Store file to temp directory
-    await saveTempFile(fileId, buffer);
+    // Store file in memory (works within same function invocation on Vercel)
+    storeFile(fileId, file.name, buffer);
+    
+    // Also save to /tmp as backup (though it may not persist between invocations)
+    try {
+      await saveTempFile(fileId, buffer);
+    } catch (error) {
+      // If /tmp write fails, that's okay - we have in-memory storage
+      console.warn('[Upload] Failed to save to /tmp, using in-memory storage only:', error);
+    }
 
     // Generate preview analysis (minimal - no heavy processing)
     let preview;
