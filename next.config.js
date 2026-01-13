@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Ensure proper handling of server-side PDF generation
-  serverExternalPackages: ['pdfkit'],
+  // PDFKit works with default Next.js configuration
+  // No special webpack config needed
 };
 
 module.exports = nextConfig;
