@@ -1,0 +1,89 @@
+/**
+ * POST /api/checkout/
+ * Create Stripe Checkout session for report purchase
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getSessionFromCookie, createSession, setSessionCookie } from '@/lib/session';
+import { getClientIp } from '@/lib/ip';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
+import { cleanupOldTempFiles, readTempFile } from '@/lib/tmpFiles';
+import { ERRORS } from '@/lib/errors';
+import { createCheckoutSession } from '@/lib/stripe';
+
+interface CheckoutRequestBody {
+  selectedKeyColumn?: {
+    sheet: string;
+    column: string;
+    columnIndex: number;
+  };
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Cleanup old temp files
+    await cleanupOldTempFiles();
+
+    // Rate limiting (light endpoint)
+    const ip = getClientIp(request);
+    const rateLimitCheck = checkRateLimit(ip, RATE_LIMITS.LIGHT);
+    if (!rateLimitCheck.allowed) {
+      const { json, status } = ERRORS.RATE_LIMIT(rateLimitCheck.remaining);
+      return NextResponse.json(json, { status });
+    }
+
+    // Verify session exists
+    const session = await getSessionFromCookie();
+    
+    if (!session) {
+      const { json, status } = ERRORS.SESSION_EXPIRED();
+      return NextResponse.json(json, { status });
+    }
+
+    // Check if file still exists in temp storage
+    const buffer = await readTempFile(session.fileId);
+    if (!buffer) {
+      const { json, status } = ERRORS.FILE_EXPIRED();
+      return NextResponse.json(json, { status });
+    }
+
+    // Get selected key column from request body (optional)
+    let selectedKeyColumn = session.selectedKeyColumn;
+    try {
+      const body: CheckoutRequestBody = await request.json();
+      if (body.selectedKeyColumn) {
+        selectedKeyColumn = body.selectedKeyColumn;
+      }
+    } catch {
+      // Body parsing failed, use existing selection
+    }
+
+    // Update session with key column selection
+    if (selectedKeyColumn !== session.selectedKeyColumn) {
+      const newToken = await createSession({
+        fileId: session.fileId,
+        fileName: session.fileName,
+        paid: session.paid,
+        selectedKeyColumn,
+      });
+      await setSessionCookie(newToken);
+    }
+
+    // Create Stripe Checkout session
+    const checkoutSession = await createCheckoutSession(
+      session.fileId,
+      session.fileName
+    );
+
+    return NextResponse.json({
+      ok: true,
+      checkoutUrl: checkoutSession.url,
+      sessionId: checkoutSession.id,
+    });
+
+  } catch (error) {
+    console.error('[Checkout] Error:', error);
+    const { json, status } = ERRORS.INTERNAL('Failed to create checkout session');
+    return NextResponse.json(json, { status });
+  }
+}
