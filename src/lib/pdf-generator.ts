@@ -135,9 +135,8 @@ function renderTitlePage(doc: PDFKit.PDFDocument, result: AnalysisResult): void 
   
   doc.fontSize(12)
     .text('File:', boxX + 20, doc.y, { continued: true })
-    .font('Helvetica-Bold')
-    .text(` ${result.fileName}`, { lineBreak: true })
-    .font('Helvetica');
+    .fontSize(12)
+    .text(` ${result.fileName}`, { lineBreak: true });
 
   doc.moveDown(0.3);
   doc.text('Analyzed:', boxX + 20, doc.y, { continued: true })
@@ -233,8 +232,7 @@ function renderFindings(doc: PDFKit.PDFDocument, findings: Finding[]): void {
   // Table header
   const headerY = doc.y;
   doc.fontSize(9)
-    .fillColor(COLORS.textLight)
-    .font('Helvetica-Bold');
+    .fillColor(COLORS.textLight);
 
   let x = doc.page.margins.left;
   doc.text('Severity', x, headerY, { width: colWidths.severity });
@@ -245,7 +243,6 @@ function renderFindings(doc: PDFKit.PDFDocument, findings: Finding[]): void {
   x += colWidths.sheet;
   doc.text('Description', x, headerY, { width: colWidths.description });
 
-  doc.font('Helvetica');
   doc.moveDown(0.5);
 
   // Draw header underline
@@ -349,10 +346,8 @@ function renderSuggestions(doc: PDFKit.PDFDocument, findings: Finding[]): void {
 
     doc.fontSize(12)
       .fillColor(COLORS.text)
-      .font('Helvetica-Bold')
       .text(category);
     
-    doc.font('Helvetica');
     doc.moveDown(0.2);
 
     suggestions.forEach(suggestion => {
