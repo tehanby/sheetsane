@@ -76,12 +76,10 @@ export function generatePDFReport(result: AnalysisResult): Promise<Buffer> {
       // Suggestions Section
       renderSuggestions(doc, result.findings);
 
-      // Footer on all pages
-      const pageCount = doc.bufferedPageRange();
-      for (let i = 0; i < pageCount.count; i++) {
-        doc.switchToPage(i);
-        renderFooter(doc, i + 1, pageCount.count);
-      }
+      // Note: We can't add footers after all content in PDFKit
+      // because bufferedPageRange() requires doc.end() first
+      // and we can't modify pages after end().
+      // Footers would need to be added page-by-page as content is rendered.
 
       doc.end();
     } catch (error) {

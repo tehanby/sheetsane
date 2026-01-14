@@ -106,7 +106,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[Report Download] Error:', error);
-    const { json, status } = ERRORS.INTERNAL('Failed to generate report');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[Report Download] Error details:', errorMessage, error);
+    const { json, status } = ERRORS.INTERNAL(`Failed to generate report: ${errorMessage}`);
     return NextResponse.json(json, { status });
   }
 }
