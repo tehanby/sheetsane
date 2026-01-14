@@ -177,8 +177,11 @@ export default function HomePage() {
             See what it checks
           </button>
         </div>
-        <p className="text-sm text-foreground/50">
+        <p className="text-sm text-foreground/50 mb-2">
           One-time payment. No subscription.
+        </p>
+        <p className="text-xs text-foreground/40">
+          Catches issues that cost hours to find manually.
         </p>
       </section>
 
@@ -217,8 +220,8 @@ export default function HomePage() {
         <section className="animate-fade-in animation-delay-100">
           {/* Upload Zone */}
           <div
-            className={`drop-zone border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
-              isDragging ? 'dragging border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+            className={`drop-zone border border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
+              isDragging ? 'dragging border-primary/60 bg-primary/5' : 'border-border/60 hover:border-border/80'
             } ${state === 'uploading' ? 'pointer-events-none opacity-60' : ''}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -413,7 +416,7 @@ export default function HomePage() {
       <section id="checks" className="mt-16 mb-16 animate-fade-in animation-delay-300">
         <div className="text-center mb-8">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
-            What It Checks
+            What This Catches (Automatically)
           </h2>
           <p className="text-foreground/60 max-w-2xl mx-auto">
             Comprehensive analysis of your spreadsheet for common errors and data quality issues
@@ -503,6 +506,28 @@ export default function HomePage() {
           <p className="text-sm text-foreground/50">
             Secure checkout. Fast results.
           </p>
+        </div>
+      </section>
+
+      {/* Micro FAQ */}
+      <section className="mb-12 animate-fade-in animation-delay-500">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">
+              Does this modify my spreadsheet?
+            </h3>
+            <p className="text-sm text-foreground/60">
+              No. Files are analyzed read-only and deleted after processing.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">
+              Will this work on large files?
+            </h3>
+            <p className="text-sm text-foreground/60">
+              Files up to 10MB with multiple sheets are supported.
+            </p>
+          </div>
         </div>
       </section>
 
