@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // PDFKit works with default Next.js configuration
-  // No special webpack config needed
+  // Using PDFKit standalone build which includes all font data
+  // No need for webpack config to copy font files
 };
 
 module.exports = nextConfig;

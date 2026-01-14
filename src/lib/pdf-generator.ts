@@ -3,7 +3,9 @@
  * Creates a professional sanity report document
  */
 
-import PDFDocument from 'pdfkit';
+// Use standalone PDFKit build which includes font data, avoiding file system dependencies
+// This is required for serverless environments like Vercel
+import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
 import type { AnalysisResult, Finding } from './types';
 
 // Colors
