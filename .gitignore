@@ -39,3 +39,8 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+DEMO_VIDEO_GUIDE.md
+SALES_AND_MARKETING.md
+VIDEO_FLOW_CORRECTED.md
+video-script.txt

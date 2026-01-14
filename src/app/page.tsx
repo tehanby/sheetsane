@@ -143,17 +143,73 @@ export default function HomePage() {
     }
   }, []);
 
+  const scrollToChecks = useCallback(() => {
+    const checksSection = document.getElementById('checks');
+    if (checksSection) {
+      checksSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Hero Section */}
       <section className="text-center mb-12 animate-fade-in">
         <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-foreground">
-          Is your spreadsheet <span className="text-primary">sane</span>?
+          Instantly find errors in your Excel spreadsheets
         </h1>
-        <p className="text-lg text-foreground/60 max-w-2xl mx-auto">
-          Upload your Excel file and instantly get a comprehensive sanity report. 
-          Find errors, inconsistencies, and data quality issues in seconds.
+        <p className="text-lg text-foreground/60 max-w-2xl mx-auto mb-8">
+          Upload a spreadsheet and get a clear report of broken formulas, duplicates, and data issues. No signup.
         </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-3">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="btn-primary text-lg px-8 py-4 inline-flex items-center justify-center gap-2"
+          >
+            Check My Spreadsheet — $19
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </button>
+          <button
+            onClick={scrollToChecks}
+            className="text-foreground/60 hover:text-foreground transition-colors text-sm underline"
+          >
+            See what it checks
+          </button>
+        </div>
+        <p className="text-sm text-foreground/50">
+          One-time payment. No subscription.
+        </p>
+      </section>
+
+      {/* Trust + Benefits */}
+      <section className="mb-12 animate-fade-in animation-delay-100">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex items-start gap-3 text-sm">
+            <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-foreground/80">Detect broken formulas and Excel errors</span>
+          </div>
+          <div className="flex items-start gap-3 text-sm">
+            <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-foreground/80">Find duplicate IDs and empty columns</span>
+          </div>
+          <div className="flex items-start gap-3 text-sm">
+            <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-foreground/80">Catch hidden sheets and data issues</span>
+          </div>
+          <div className="flex items-start gap-3 text-sm">
+            <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-foreground/80">Instant download-ready report</span>
+          </div>
+        </div>
       </section>
 
       {/* Upload / Preview Section */}
@@ -206,24 +262,6 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Features */}
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            {[
-              { icon: '🔍', title: 'Deep Analysis', desc: 'Formula errors, missing data, type mismatches' },
-              { icon: '⚡', title: 'Instant Results', desc: 'Get your report in seconds, not hours' },
-              { icon: '📄', title: 'PDF Report', desc: 'Professional report ready to share' },
-            ].map((feature, i) => (
-              <div 
-                key={feature.title} 
-                className={`card text-center animate-fade-in`}
-                style={{ animationDelay: `${200 + i * 100}ms` }}
-              >
-                <div className="text-3xl mb-3">{feature.icon}</div>
-                <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
-                <p className="text-sm text-foreground/50">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
         </section>
       ) : (state === 'preview' || state === 'processing') && preview ? (
         /* Preview Section */
@@ -370,6 +408,110 @@ export default function HomePage() {
           )}
         </section>
       ) : null}
+
+      {/* What It Checks Section */}
+      <section id="checks" className="mt-16 mb-16 animate-fade-in animation-delay-300">
+        <div className="text-center mb-8">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+            What It Checks
+          </h2>
+          <p className="text-foreground/60 max-w-2xl mx-auto">
+            Comprehensive analysis of your spreadsheet for common errors and data quality issues
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="card">
+            <h3 className="font-semibold text-foreground mb-3">Formula Errors</h3>
+            <ul className="space-y-2 text-sm text-foreground/70">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Broken formulas and Excel errors (#REF!, #DIV/0!, #VALUE!, #N/A)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Error values in cells that could break calculations</span>
+              </li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 className="font-semibold text-foreground mb-3">Data Quality</h3>
+            <ul className="space-y-2 text-sm text-foreground/70">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Duplicate values in key columns (ID/SKU/Email)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Empty or inconsistent headers</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Data type mismatches (dates-as-text, numbers-as-text)</span>
+              </li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 className="font-semibold text-foreground mb-3">Workbook Structure</h3>
+            <ul className="space-y-2 text-sm text-foreground/70">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Hidden sheets that might contain important data</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Sheets with only headers and no data rows</span>
+              </li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 className="font-semibold text-foreground mb-3">Report Output</h3>
+            <ul className="space-y-2 text-sm text-foreground/70">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Detailed score (0-100) with explanation</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Professional PDF report ready to share</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Repeat */}
+      <section className="mb-16 animate-fade-in animation-delay-400">
+        <div className="card bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20 text-center">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-4">
+            Ready to check your spreadsheet?
+          </h2>
+          <button
+            onClick={() => {
+              if (state === 'idle' || state === 'error') {
+                fileInputRef.current?.click();
+              } else {
+                scrollToChecks();
+              }
+            }}
+            className="btn-primary text-lg px-8 py-4 inline-flex items-center justify-center gap-2 mb-3"
+          >
+            Check My Spreadsheet — $19
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </button>
+          <p className="text-sm text-foreground/50">
+            Secure checkout. Fast results.
+          </p>
+        </div>
+      </section>
+
+      {/* Footer Line */}
+      <section className="mb-12 text-center animate-fade-in animation-delay-500">
+        <p className="text-sm text-foreground/50">
+          Built for analysts, consultants, and operators who rely on spreadsheets every day.
+        </p>
+      </section>
 
       {/* Trust Indicators */}
       <section className="mt-16 text-center animate-fade-in animation-delay-500">
