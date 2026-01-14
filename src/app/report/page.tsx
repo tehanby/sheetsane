@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AnalysisResult, Finding } from '@/lib/types';
+import { getFileFromBrowser, isClientStorageAvailable } from '@/lib/client-storage';
 
 type ReportState = 'loading' | 'analyzing' | 'ready' | 'error';
 
@@ -94,6 +95,13 @@ export default function ReportPage() {
       if (response.status === 404 || !data.result) {
         // Need to run analysis
         setState('analyzing');
+        
+        // If file is missing, try to get it from browser storage and re-upload
+        if (isClientStorageAvailable()) {
+          // Try to get file from browser storage
+          // Note: We'd need the fileId from session, but we can't access it here
+          // So we'll let the server handle the error and show re-upload message
+        }
         
         response = await fetch('/api/analyze/', {
           method: 'POST',

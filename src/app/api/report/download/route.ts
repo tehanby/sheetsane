@@ -11,6 +11,7 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, readTempFile, deleteTempFile } from '@/lib/tmpFiles';
 import { ERRORS } from '@/lib/errors';
 import { getAnalysisResult, getFile } from '@/lib/storage';
+import { downloadFromR2, isR2Configured } from '@/lib/r2-storage';
 import { analyzeWorkbook } from '@/lib/analyzer';
 import { generatePDFReport } from '@/lib/pdf-generator';
 
@@ -45,14 +46,24 @@ export async function GET(request: NextRequest) {
     let result = getAnalysisResult(session.fileId);
     
     if (!result) {
-      // Try to regenerate from storage (try in-memory first, then /tmp)
+      // Try to regenerate from storage (try in-memory first, then R2, then /tmp)
       let buffer: Buffer | null = null;
       
       // Try in-memory storage first
       const storedFile = getFile(session.fileId);
       if (storedFile) {
         buffer = storedFile.buffer;
-      } else {
+      } else if (isR2Configured()) {
+        // Try R2 storage (persists across invocations)
+        try {
+          buffer = await downloadFromR2(session.fileId);
+        } catch (error) {
+          console.error('[Report Download] R2 download failed:', error);
+          // Continue to fallback
+        }
+      }
+      
+      if (!buffer) {
         // Fallback to /tmp
         buffer = await readTempFile(session.fileId);
       }

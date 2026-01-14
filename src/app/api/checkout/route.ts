@@ -9,6 +9,7 @@ import { getClientIp } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, readTempFile } from '@/lib/tmpFiles';
 import { fileExists, getFile } from '@/lib/storage';
+import { downloadFromR2, isR2Configured } from '@/lib/r2-storage';
 import { ERRORS } from '@/lib/errors';
 import { createCheckoutSession } from '@/lib/stripe';
 
@@ -41,11 +42,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(json, { status });
     }
 
-    // Check if file still exists (try in-memory first, then /tmp)
+    // Check if file still exists (try in-memory first, then R2, then /tmp)
     const storedFile = getFile(session.fileId);
-    const tempBuffer = storedFile ? null : await readTempFile(session.fileId);
+    let fileExists = !!storedFile;
     
-    if (!storedFile && !tempBuffer) {
+    if (!fileExists && isR2Configured()) {
+      // Check R2 storage
+      try {
+        const r2Buffer = await downloadFromR2(session.fileId);
+        fileExists = !!r2Buffer;
+      } catch (error) {
+        console.error('[Checkout] R2 check failed:', error);
+      }
+    }
+    
+    if (!fileExists) {
+      // Check /tmp fallback
+      const tempBuffer = await readTempFile(session.fileId);
+      fileExists = !!tempBuffer;
+    }
+    
+    if (!fileExists) {
       const { json, status } = ERRORS.FILE_EXPIRED();
       return NextResponse.json(json, { status });
     }

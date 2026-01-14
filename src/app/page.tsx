@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import type { AnalysisPreview, ColumnCandidate } from '@/lib/types';
+import { storeFileInBrowser, isClientStorageAvailable } from '@/lib/client-storage';
 
 type UploadState = 'idle' | 'uploading' | 'preview' | 'processing' | 'error';
 
@@ -44,6 +45,20 @@ export default function HomePage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Upload failed');
+      }
+
+      // Store file in browser for persistence across server invocations
+      if (isClientStorageAvailable() && data.preview?.fileId) {
+        try {
+          await storeFileInBrowser(
+            data.preview.fileId,
+            file.name,
+            await file.arrayBuffer()
+          );
+        } catch (error) {
+          console.warn('Failed to store file in browser:', error);
+          // Continue anyway - this is a fallback feature
+        }
       }
 
       setPreview(data.preview);

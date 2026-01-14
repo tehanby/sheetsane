@@ -11,6 +11,7 @@ import { getClientIp } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rateLimit';
 import { cleanupOldTempFiles, saveTempFile } from '@/lib/tmpFiles';
 import { storeFile } from '@/lib/storage';
+import { uploadToR2, isR2Configured } from '@/lib/r2-storage';
 import { MAX_FILE_BYTES, ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES } from '@/lib/limits';
 import { ERRORS } from '@/lib/errors';
 import { generatePreview } from '@/lib/analyzer';
@@ -73,12 +74,22 @@ export async function POST(request: NextRequest) {
     // Store file in memory (works within same function invocation on Vercel)
     storeFile(fileId, file.name, buffer);
     
-    // Also save to /tmp as backup (though it may not persist between invocations)
-    try {
-      await saveTempFile(fileId, buffer);
-    } catch (error) {
-      // If /tmp write fails, that's okay - we have in-memory storage
-      console.warn('[Upload] Failed to save to /tmp, using in-memory storage only:', error);
+    // Upload to R2 if configured (persistent storage across invocations)
+    if (isR2Configured()) {
+      try {
+        await uploadToR2(fileId, buffer, file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        console.log(`[Upload] File stored in R2: ${fileId}`);
+      } catch (error) {
+        console.error('[Upload] R2 upload failed, using fallback storage:', error);
+        // Continue with fallback storage - don't fail the upload
+      }
+    } else {
+      // Fallback: save to /tmp (may not persist on Vercel between invocations)
+      try {
+        await saveTempFile(fileId, buffer);
+      } catch (error) {
+        console.warn('[Upload] Failed to save to /tmp:', error);
+      }
     }
 
     // Generate preview analysis (minimal - no heavy processing)

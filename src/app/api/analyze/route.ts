@@ -12,6 +12,7 @@ import { cleanupOldTempFiles, readTempFile } from '@/lib/tmpFiles';
 import { ERRORS } from '@/lib/errors';
 import { analyzeWorkbook } from '@/lib/analyzer';
 import { storeAnalysisResult, getAnalysisResult, getFile } from '@/lib/storage';
+import { downloadFromR2, isR2Configured } from '@/lib/r2-storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,14 +50,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get file from storage (try in-memory first, then /tmp)
+    // Get file from storage (try in-memory first, then R2, then /tmp)
     let buffer: Buffer | null = null;
     
     // Try in-memory storage first (works within same function invocation)
     const storedFile = getFile(session.fileId);
     if (storedFile) {
       buffer = storedFile.buffer;
-    } else {
+    } else if (isR2Configured()) {
+      // Try R2 storage (persists across invocations)
+      try {
+        buffer = await downloadFromR2(session.fileId);
+      } catch (error) {
+        console.error('[Analyze] R2 download failed:', error);
+        // Continue to fallback
+      }
+    }
+    
+    if (!buffer) {
       // Fallback to /tmp (may not persist on Vercel between invocations)
       buffer = await readTempFile(session.fileId);
     }
